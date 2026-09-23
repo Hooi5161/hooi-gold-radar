@@ -182,47 +182,31 @@ padding:10px 10px 25px;
 </div>
 
 
+
+
 <!-- K LINE -->
-
 <div class="chart">
+  <div class="tradingview-widget-container" style="height:100%;width:100%">
+    <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
 
-<div class="tradingview-widget-container"
-style="height:100%;width:100%">
-
-<div class="tradingview-widget-container__widget"
-style="height:100%;width:100%">
+    <script type="text/javascript"
+      src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+      async>
+    {
+      "autosize": true,
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "timezone": "Asia/Kuala_Lumpur",
+      "theme": "dark",
+      "style": "1",
+      "locale": "zh_CN",
+      "allow_symbol_change": false,
+      "calendar": false,
+      "support_host": "https://www.tradingview.com"
+    }
+    </script>
+  </div>
 </div>
-
-<script
-type="text/javascript"
-src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-async>
-
-{
-"autosize":true,
-"symbol":"OANDA:XAUUSD",
-"interval":"15",
-"timezone":"Asia/Kuala_Lumpur",
-"theme":"dark",
-"style":"1",
-"locale":"en",
-"allow_symbol_change":false,
-"save_image":false,
-"hide_side_toolbar":false,
-"withdateranges":true,
-"studies":[
-"RSI@tv-basicstudies",
-"MASimple@tv-basicstudies"
-],
-"support_host":"https://www.tradingview.com"
-}
-
-</script>
-
-</div>
-</div>
-
-
 <!-- MARKET ANALYSIS -->
 
 <div class="section">
@@ -378,13 +362,4 @@ input.value="";
 
 }
 
-</script>
-<script>
-async function updateGoldPrice() {
-  try {
-    console.log("HOOI GOLD: 正在读取黄金行情...");
-  } catch (error) {
-    console.error("HOOI GOLD ERROR:", error);
-  }
-}
 </script>
