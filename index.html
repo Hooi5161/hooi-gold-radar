@@ -379,6 +379,12 @@ input.value="";
 }
 
 </script>
-
-</body>
-</html>
+<script>
+async function updateGoldPrice() {
+  try {
+    console.log("HOOI GOLD: 正在读取黄金行情...");
+  } catch (error) {
+    console.error("HOOI GOLD ERROR:", error);
+  }
+}
+</script>
