@@ -181,32 +181,14 @@ padding:10px 10px 25px;
 <div class="live">● LIVE</div>
 </div>
 
-
-
-
 <!-- K LINE -->
-<div class="chart">
-  <div class="tradingview-widget-container" style="height:100%;width:100%">
-    <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-
-    <script type="text/javascript"
-      src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-      async>
-    {
-      "autosize": true,
-      "symbol": "OANDA:XAUUSD",
-      "interval": "15",
-      "timezone": "Asia/Kuala_Lumpur",
-      "theme": "dark",
-      "style": "1",
-      "locale": "zh_CN",
-      "allow_symbol_change": false,
-      "calendar": false,
-      "support_host": "https://www.tradingview.com"
-    }
-    </script>
-  </div>
+<div class="chart" style="position:relative;">
+  <canvas id="goldChart"
+          style="width:100%;height:100%;display:block;">
+  </canvas>
 </div>
+
+
 <!-- MARKET ANALYSIS -->
 
 <div class="section">
@@ -362,4 +344,74 @@ input.value="";
 
 }
 
+</script>
+<script>
+function drawGoldChart() {
+  const canvas = document.getElementById("goldChart");
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = rect.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const candles = [
+    [4280,4288,4276,4285],
+    [4285,4292,4281,4289],
+    [4289,4291,4280,4283],
+    [4283,4290,4279,4288],
+    [4288,4296,4285,4293],
+    [4293,4298,4287,4290],
+    [4290,4297,4288,4295],
+    [4295,4300,4291,4298],
+    [4298,4302,4290,4292],
+    [4292,4299,4289,4296]
+  ];
+
+  const min = 4275;
+  const max = 4305;
+
+  function y(price) {
+    return h - ((price - min) / (max - min)) * h;
+  }
+
+  const step = w / candles.length;
+
+  candles.forEach((c, i) => {
+    const [open, high, low, close] = c;
+    const x = step * i + step / 2;
+
+    const up = close >= open;
+    ctx.strokeStyle = up ? "#00d084" : "#ff4d67";
+    ctx.fillStyle = up ? "#00d084" : "#ff4d67";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y(high));
+    ctx.lineTo(x, y(low));
+    ctx.stroke();
+
+    const top = Math.min(y(open), y(close));
+    const bottom = Math.max(y(open), y(close));
+
+    ctx.fillRect(
+      x - step * 0.25,
+      top,
+      step * 0.5,
+      Math.max(bottom - top, 3)
+    );
+  });
+}
+
+window.addEventListener("load", drawGoldChart);
+window.addEventListener("resize", drawGoldChart);
 </script>
