@@ -1,1 +1,384 @@
-<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0d12"><link rel="manifest" href="manifest.json"><title>HOOI Gold Radar</title><style>body{margin:0;background:#0b0d12;color:#f6f7f9;font-family:system-ui,-apple-system,sans-serif}.wrap{max-width:760px;margin:auto;padding:16px}.card{background:#151922;border:1px solid #2a303c;border-radius:18px;padding:16px;margin:12px 0}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.price{font-size:42px;font-weight:800}.muted{color:#9ca6b7;font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.sig{text-align:center;background:#11151d;border-radius:15px;padding:14px}.dot{width:34px;height:34px;border-radius:50%;display:inline-block;border:4px solid #fff;margin:8px}.green{background:#30d158}.red{background:#ff453a}.yellow{background:#ffd60a}.big{font-size:22px;font-weight:800}canvas{width:100%;height:220px;background:#0f131a;border-radius:12px}.status{padding:8px 12px;border-radius:999px;background:#232936;font-size:12px}@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}button{background:#232936;color:white;border:1px solid #343c4a;border-radius:10px;padding:10px}</style></head><body><main class="wrap"><div class="row"><div><b>HOOI GOLD RADAR</b><div class="muted">XAU/USD · 免费数据版</div></div><span id="feed" class="status">连接中</span></div><section class="card"><div class="row"><div><div class="muted">黄金现货 USD/oz</div><div id="price" class="price">--</div><div id="updated" class="muted">等待真实行情</div></div><div id="mainDot" class="dot yellow"></div></div><canvas id="chart" width="700" height="220"></canvas></section><section class="card"><b>多周期雷达</b><div id="signals" class="grid" style="margin-top:12px"></div></section><section class="card"><div class="row"><div><div class="muted">当前提示</div><div id="action" class="big">🟡 等待</div></div><div id="score" class="big">--</div></div><p id="reason" class="muted">真实数据不足时不会制造交易信号。</p></section><section class="card muted">数据源：XAUS 免费公开 API。约30秒缓存，属于指示性现货中间价，并非你的券商可成交报价。此版本不收月费。方向雷达是技术分析，不保证未来走势。</section></main><script>const P='https://xaus.com/api/v1/spot?compact=1',H='https://xaus.com/api/v1/intraday?symbol=xau&hours=48';let hist=[];const periods=['15分钟','30分钟','1小时','6小时','24小时','10天','1个月','3个月'];function draw(){let c=document.querySelector('#chart'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);if(hist.length<2)return;let a=hist.slice(-100),mn=Math.min(...a),mx=Math.max(...a),s=Math.max(.01,mx-mn);x.strokeStyle='#d8b44a';x.lineWidth=3;x.beginPath();a.forEach((v,i)=>{let px=10+i*(c.width-20)/(a.length-1),py=10+(mx-v)/s*(c.height-20);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke()}function classify(delta){if(Math.abs(delta)<.0007)return['yellow','等待',52];return delta>0?['green','偏上',Math.min(88,58+Math.round(delta*5000))]:['red','偏下',Math.min(88,58+Math.round(-delta*5000))]}function renderSignals(){let box=document.querySelector('#signals'),n=hist.length,last=hist[n-1]||0;let look=[8,15,30,60,180,300,500,700];box.innerHTML=periods.map((p,i)=>{let j=Math.max(0,n-1-look[i]),base=hist[j]||last,d=base?(last-base)/base:0,[col,t,sc]=classify(d);return `<div class="sig"><div class="muted">${p}</div><span class="dot ${col}"></span><div><b>${t}</b></div><div class="muted">${sc}/100</div></div>`}).join('');let base=hist[Math.max(0,n-31)]||last,d=base?(last-base)/base:0,[col,t,sc]=classify(d);document.querySelector('#mainDot').className='dot '+col;document.querySelector('#action').textContent=(col==='green'?'🟢':col==='red'?'🔴':'🟡')+' '+t;document.querySelector('#score').textContent=sc+'/100';document.querySelector('#reason').textContent=col==='yellow'?'短线方向不够一致，等待。':'短线价格动量已形成，但仍需结合你的交易平台报价与风险控制。'}async function loadHistory(){try{let r=await fetch(H);let j=await r.json();let arr=j.data||j.points||j.series||j; if(Array.isArray(arr)){hist=arr.map(v=>Number(v.price??v.close??v.value)).filter(Number.isFinite);draw();renderSignals()}}catch(e){}}async function tick(){try{let r=await fetch(P,{cache:'no-store'});if(!r.ok)throw 0;let j=await r.json(),p=Number(j.spot_usd_oz??j.xau?.price);if(!Number.isFinite(p))throw 0;document.querySelector('#price').textContent=p.toFixed(2);document.querySelector('#updated').textContent='更新时间 '+(j.updated_at?new Date(j.updated_at).toLocaleString():'刚刚');document.querySelector('#feed').textContent='真实行情';hist.push(p);if(hist.length>800)hist.shift();draw();renderSignals()}catch(e){document.querySelector('#feed').textContent='行情暂不可用';}}loadHistory().finally(tick);setInterval(tick,30000);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');</script></body></html>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#05080d">
+
+<title>HOOI GOLD AI</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#05080d;
+color:white;
+font-family:Arial,sans-serif;
+}
+
+header{
+padding:16px;
+background:#0a0f17;
+border-bottom:1px solid #202938;
+}
+
+.logo{
+font-size:21px;
+font-weight:900;
+color:#f5c451;
+}
+
+.subtitle{
+font-size:11px;
+color:#778398;
+margin-top:4px;
+}
+
+.market{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 15px;
+background:#0c131d;
+}
+
+.symbol{
+font-size:17px;
+font-weight:bold;
+}
+
+.live{
+color:#32d583;
+font-size:12px;
+}
+
+.chart{
+height:480px;
+width:100%;
+}
+
+.section{
+margin:12px;
+padding:14px;
+background:#0c131d;
+border:1px solid #202938;
+border-radius:14px;
+}
+
+.section-title{
+color:#f5c451;
+font-weight:bold;
+font-size:14px;
+margin-bottom:12px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+}
+
+.card{
+padding:11px;
+background:#111b28;
+border-radius:10px;
+}
+
+.label{
+font-size:10px;
+color:#7e899b;
+}
+
+.value{
+font-size:15px;
+font-weight:bold;
+margin-top:5px;
+}
+
+.wait{
+color:#f5c451;
+}
+
+.ai{
+background:linear-gradient(145deg,#101927,#0b111b);
+}
+
+.ai-status{
+font-size:11px;
+color:#32d583;
+margin-bottom:12px;
+}
+
+.messages{
+min-height:100px;
+padding:12px;
+background:#070b11;
+border-radius:10px;
+font-size:13px;
+line-height:1.5;
+color:#d7dce5;
+}
+
+.input-row{
+display:flex;
+gap:7px;
+margin-top:10px;
+}
+
+input{
+flex:1;
+background:#080d14;
+border:1px solid #293548;
+border-radius:9px;
+padding:12px;
+color:white;
+outline:none;
+}
+
+button{
+border:0;
+border-radius:9px;
+padding:0 16px;
+background:#f5c451;
+font-weight:bold;
+color:#111;
+}
+
+.quick{
+display:flex;
+gap:6px;
+overflow:auto;
+margin-top:9px;
+}
+
+.quick button{
+white-space:nowrap;
+background:#172233;
+color:#ccd4df;
+padding:8px 10px;
+font-size:11px;
+}
+
+footer{
+text-align:center;
+color:#4f5a6b;
+font-size:10px;
+padding:10px 10px 25px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">HOOI GOLD AI</div>
+<div class="subtitle">XAU/USD INTELLIGENT TRADING TERMINAL • V3</div>
+</header>
+
+<div class="market">
+<div class="symbol">GOLD / USD</div>
+<div class="live">● LIVE</div>
+</div>
+
+
+<!-- K LINE -->
+
+<div class="chart">
+
+<div class="tradingview-widget-container"
+style="height:100%;width:100%">
+
+<div class="tradingview-widget-container__widget"
+style="height:100%;width:100%">
+</div>
+
+<script
+type="text/javascript"
+src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+async>
+
+{
+"autosize":true,
+"symbol":"OANDA:XAUUSD",
+"interval":"15",
+"timezone":"Asia/Kuala_Lumpur",
+"theme":"dark",
+"style":"1",
+"locale":"en",
+"allow_symbol_change":false,
+"save_image":false,
+"hide_side_toolbar":false,
+"withdateranges":true,
+"studies":[
+"RSI@tv-basicstudies",
+"MASimple@tv-basicstudies"
+],
+"support_host":"https://www.tradingview.com"
+}
+
+</script>
+
+</div>
+</div>
+
+
+<!-- MARKET ANALYSIS -->
+
+<div class="section">
+
+<div class="section-title">
+MULTI-TIMEFRAME ANALYSIS
+</div>
+
+<div class="grid">
+
+<div class="card">
+<div class="label">15 MIN</div>
+<div class="value wait">WAITING</div>
+</div>
+
+<div class="card">
+<div class="label">30 MIN</div>
+<div class="value wait">WAITING</div>
+</div>
+
+<div class="card">
+<div class="label">1 HOUR</div>
+<div class="value wait">WAITING</div>
+</div>
+
+<div class="card">
+<div class="label">4 HOURS</div>
+<div class="value wait">WAITING</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- TRADE PLAN -->
+
+<div class="section">
+
+<div class="section-title">
+AI TRADE PLAN
+</div>
+
+<div class="grid">
+
+<div class="card">
+<div class="label">DIRECTION</div>
+<div class="value">—</div>
+</div>
+
+<div class="card">
+<div class="label">ENTRY ZONE</div>
+<div class="value">—</div>
+</div>
+
+<div class="card">
+<div class="label">STOP LOSS</div>
+<div class="value">—</div>
+</div>
+
+<div class="card">
+<div class="label">TAKE PROFIT</div>
+<div class="value">—</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- AI -->
+
+<div class="section ai">
+
+<div class="section-title">
+🤖 HOOI AI GOLD ASSISTANT
+</div>
+
+<div class="ai-status">
+● AI MODULE READY
+</div>
+
+<div class="messages" id="messages">
+
+HOOI AI：系统界面已经启动。<br><br>
+
+下一阶段连接实时黄金行情与 AI 分析引擎后，
+我会根据真实市场数据进行分析。
+
+</div>
+
+<div class="quick">
+
+<button onclick="question('分析现在趋势')">
+分析趋势
+</button>
+
+<button onclick="question('找支撑压力')">
+支撑压力
+</button>
+
+<button onclick="question('寻找交易机会')">
+交易机会
+</button>
+
+<button onclick="question('分析风险')">
+风险分析
+</button>
+
+</div>
+
+<div class="input-row">
+
+<input
+id="question"
+placeholder="问 HOOI AI 黄金走势..."
+>
+
+<button onclick="askAI()">
+发送
+</button>
+
+</div>
+
+</div>
+
+
+<footer>
+HOOI GOLD AI V3 • PRIVATE GOLD ANALYSIS TERMINAL
+</footer>
+
+
+<script>
+
+function question(text){
+
+document.getElementById("question").value=text;
+
+}
+
+function askAI(){
+
+let input=document.getElementById("question");
+
+let msg=document.getElementById("messages");
+
+if(!input.value.trim()) return;
+
+msg.innerHTML=
+"你："+input.value+
+"<br><br>"+
+"HOOI AI：AI 后端尚未连接。下一阶段连接实时行情和 AI 后，我会根据真实数据回答，而不是制造交易信号。";
+
+input.value="";
+
+}
+
+</script>
+
+</body>
+</html>
