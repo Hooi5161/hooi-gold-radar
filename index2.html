@@ -825,9 +825,9 @@ loadRealMarketData = async function () {
     connection.className = "status wait";
 
     const response = await fetch(
-    "https://api.goldprice.dev/v1/prices?symbol=XAU-USD-SPOT",
-      { cache: "no-store" }
-    );
+  "https://hooi-gold-api359gold.ccyu08062.workers.dev",
+  { cache: "no-store" }
+);
 
     if (!response.ok) {
       throw new Error("HTTP " + response.status);
