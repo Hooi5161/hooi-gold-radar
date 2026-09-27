@@ -815,19 +815,21 @@ window.addEventListener(
   "resize",
   drawCandles
 );
-// ===== HOOI REAL XAU/USD CONNECTION =====
+// ===== HOOI GOLD MARKET CONNECTION =====
 
 loadRealMarketData = async function () {
+
   const connection = document.getElementById("connection");
 
   try {
-    connection.textContent = "🟡 正在连接真实行情...";
+
+    connection.textContent = "🟡 正在连接黄金行情...";
     connection.className = "status wait";
 
     const response = await fetch(
-  "https://hooi-gold-api359gold.ccyu08062.workers.dev",
-  { cache: "no-store" }
-);
+      "https://hooi-gold-api359gold.ccyu08062.workers.dev",
+      { cache: "no-store" }
+    );
 
     if (!response.ok) {
       throw new Error("HTTP " + response.status);
@@ -840,24 +842,81 @@ loadRealMarketData = async function () {
       throw new Error("价格数据无效");
     }
 
+    if (!Array.isArray(data.candles) || data.candles.length < 20) {
+      throw new Error("K线数据不足");
+    }
+
     marketData.price = price;
-    marketData.updated =
-      data.updated_at || new Date().toISOString();
 
-    connection.textContent = "🟢 真实行情已连接";
-    connection.className = "status live";
+    marketData.candles = data.candles
+      .map(c => ({
+        time: c.time,
+        open: Number(c.open),
+        high: Number(c.high),
+        low: Number(c.low),
+        close: Number(c.close)
+      }))
+      .filter(c =>
+        Number.isFinite(c.open) &&
+        Number.isFinite(c.high) &&
+        Number.isFinite(c.low) &&
+        Number.isFinite(c.close)
+      );
 
-    render();
+    marketData.updated = new Date().toLocaleString();
+
+    document.getElementById("price").textContent =
+      price.toFixed(2);
+
+    document.getElementById("updateTime").textContent =
+      marketData.updated;
+
+    document.getElementById("priceStatus").textContent =
+      "已连接";
+
+    document.getElementById("priceStatus").className =
+      "good";
+
+    document.getElementById("candleStatus").textContent =
+      marketData.candles.length + " 根 K线";
+
+    document.getElementById("candleStatus").className =
+      "good";
+
+    connection.textContent = "🟢 黄金行情已连接";
+    connection.className = "status good";
+
+    drawCandles();
 
   } catch (error) {
-    console.error("XAU/USD ERROR:", error);
+
+    console.error("GOLD DATA ERROR:", error);
 
     connection.textContent = "🔴 行情连接失败";
-    connection.className = "status wait";
+    connection.className = "status bad";
+
+    document.getElementById("priceStatus").textContent =
+      "连接失败";
+
+    document.getElementById("priceStatus").className =
+      "bad";
+
+    document.getElementById("candleStatus").textContent =
+      "连接失败";
+
+    document.getElementById("candleStatus").className =
+      "bad";
   }
 };
 
-// ===== END REAL XAU/USD CONNECTION =====
+
+// 每 60 秒重新取得一次行情
+setInterval(
+  loadRealMarketData,
+  60000
+);
+
+// ===== END HOOI GOLD MARKET CONNECTION =====
 </script>
 
 </body>
