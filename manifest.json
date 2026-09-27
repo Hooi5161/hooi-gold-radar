@@ -1,1 +1,20 @@
-{"name":"HOOI Gold Radar","short_name":"HOOI GOLD","start_url":"./index.html","display":"standalone","background_color":"#0b0d12","theme_color":"#0b0d12","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+
+{
+  "name": "HOOI GOLD RADAR PRO",
+  "short_name": "HOOI GOLD",
+  "description": "HOOI GOLD RADAR PRO - XAU/USD Market Analysis Terminal",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090f",
+  "theme_color": "#07090f",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
